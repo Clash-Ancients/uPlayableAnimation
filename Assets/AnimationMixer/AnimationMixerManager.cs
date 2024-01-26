@@ -227,7 +227,9 @@ namespace UPlayable.AnimationMixer
                     p.SmoothWeight = Mathf.Lerp(p.SmoothWeight, p.Weight, 1f - Mathf.Exp(-25f * dt));
                 }
 
-                if ((m_layeredPlayables[i].Id == LastPlayableInPlayer || m_layeredPlayables[i].Id == CurrentPlayableIdInLayer) && requireAdjustSpeed)
+                //TODO...: 删除m_layeredPlayables[i].Id == LastPlayableInPlayer
+                //if ((m_layeredPlayables[i].Id == LastPlayableInPlayer || m_layeredPlayables[i].Id == CurrentPlayableIdInLayer) && requireAdjustSpeed)
+                if ((m_layeredPlayables[i].Id == CurrentPlayableIdInLayer) && requireAdjustSpeed)
                 {
                     p.Playable.SetSpeed(p.ClipLength / mixClipLengthForTransition * p.BaseSpeed);
                 }
