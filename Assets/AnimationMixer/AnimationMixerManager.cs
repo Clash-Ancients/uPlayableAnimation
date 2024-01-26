@@ -99,6 +99,18 @@ namespace UPlayable.AnimationMixer
         {
             if (m_remainExitTime <= 0)
             {
+                
+                //1 获取port index
+                
+                //2 设置playable set time
+                
+                //3 init runtimeinputdata
+                
+                //4 add runtimeinputdata into layeredPlayables and layeredPlayablesMap
+                
+                //5 connect playable into graph
+                
+                //6 call Play
                 var id = playable.GetHashCode();
                 var portIndex = m_recycledIndexes.Count > 0 ? m_recycledIndexes.Dequeue() : m_layeredPlayables.Count;
                 if (portIndex > m_rootPlayable.GetInputCount() - 1)
@@ -132,10 +144,14 @@ namespace UPlayable.AnimationMixer
             }
         }
 
+        //设置CurrentPlayableIdInLayer， LastPlayableInPlayer
         public void Play(int id, bool force = false)
         {
+            
             if (!force && m_remainExitTime > 0)
                 return;
+            
+            //上一个还没有播放完毕
             if (m_layeredPlayablesMap.Keys.Count > 1)
             {
                 LastPlayableInPlayer = CurrentPlayableIdInLayer;
@@ -193,21 +209,25 @@ namespace UPlayable.AnimationMixer
             }
         }
 
+        
+        //更新playable的weight
         public void OnEvaluate(float dt)
         {
             if (m_layeredPlayables.Count == 0)
                 return;
             m_timeSincePlay += dt;
             m_remainExitTime -= dt;
+            
+            
             var runtimePlayable = m_layeredPlayablesMap[CurrentPlayableIdInLayer];
-            var lastRuntimePlayable = LastPlayableInPlayer == -1 ? runtimePlayable : m_layeredPlayablesMap[LastPlayableInPlayer];
+            //var lastRuntimePlayable = LastPlayableInPlayer == -1 ? runtimePlayable : m_layeredPlayablesMap[LastPlayableInPlayer];
             m_remainExitTime = Mathf.Clamp(m_remainExitTime, 0, runtimePlayable.ExitTime);
             m_weightDiffThisFrame = runtimePlayable.FadeDuration == 0 ? 1 : dt / runtimePlayable.FadeDuration;
 
-            var currentWeight = runtimePlayable.Weight;
-            var nextWeight = Mathf.Clamp(currentWeight + m_weightDiffThisFrame, 0, runtimePlayable.TargetWeight);
-            var requireAdjustSpeed = lastRuntimePlayable.Id != runtimePlayable.Id && !lastRuntimePlayable.IsAnimatorPlayable && !runtimePlayable.IsAnimatorPlayable;
-            var mixClipLengthForTransition = Mathf.Lerp(lastRuntimePlayable.ClipLength, runtimePlayable.ClipLength, nextWeight);
+            // var currentWeight = runtimePlayable.Weight;
+            // var nextWeight = Mathf.Clamp(currentWeight + m_weightDiffThisFrame, 0, runtimePlayable.TargetWeight);
+            // var requireAdjustSpeed = lastRuntimePlayable.Id != runtimePlayable.Id && !lastRuntimePlayable.IsAnimatorPlayable && !runtimePlayable.IsAnimatorPlayable;
+            // var mixClipLengthForTransition = Mathf.Lerp(lastRuntimePlayable.ClipLength, runtimePlayable.ClipLength, nextWeight);
 
             for (int i = 0; i < m_layeredPlayables.Count; i++)
             {
@@ -229,10 +249,10 @@ namespace UPlayable.AnimationMixer
 
                 //TODO...: 删除m_layeredPlayables[i].Id == LastPlayableInPlayer
                 //if ((m_layeredPlayables[i].Id == LastPlayableInPlayer || m_layeredPlayables[i].Id == CurrentPlayableIdInLayer) && requireAdjustSpeed)
-                if ((m_layeredPlayables[i].Id == CurrentPlayableIdInLayer) && requireAdjustSpeed)
-                {
-                    p.Playable.SetSpeed(p.ClipLength / mixClipLengthForTransition * p.BaseSpeed);
-                }
+                // if ((m_layeredPlayables[i].Id == CurrentPlayableIdInLayer) && requireAdjustSpeed)
+                // {
+                //     p.Playable.SetSpeed(p.ClipLength / mixClipLengthForTransition * p.BaseSpeed);
+                // }
                 m_layeredPlayables[i] = p;
                 m_layeredPlayablesMap[m_layeredPlayables[i].Id] = p;
                 m_rootPlayable.SetInputWeight(p.OccupiedInputIndex, p.SmoothWeight);
@@ -244,7 +264,11 @@ namespace UPlayable.AnimationMixer
             for (int i = m_layeredPlayables.Count - 1; i >= 0; i--)
             {
                 var p = m_layeredPlayables[i];
-                if (m_layeredPlayables[i].Id != CurrentPlayableIdInLayer && p.Type == PlayableInputType.Dynamic && p.Weight < 0.001f && m_layeredPlayablesMap[CurrentPlayableIdInLayer].SmoothWeight > 0.99f)
+                if (
+                    m_layeredPlayables[i].Id != CurrentPlayableIdInLayer && //playable不同
+                    p.Type == PlayableInputType.Dynamic && 
+                    p.Weight < 0.001f && 
+                    m_layeredPlayablesMap[CurrentPlayableIdInLayer].SmoothWeight > 0.99f)
                 {
                     if (m_layeredPlayables[i].Id == LastPlayableInPlayer)
                     {
