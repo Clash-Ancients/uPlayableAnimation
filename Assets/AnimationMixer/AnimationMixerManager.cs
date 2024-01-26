@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -47,15 +46,23 @@ namespace UPlayable.AnimationMixer
     public class LayeredPlayablesController
     {
         public int CurrentPlayableIdInLayer;
-        private int LastPlayableInPlayer = -1;
-        private AnimationMixerPlayable m_rootPlayable;
-        private Dictionary<int, RuntimeInputData> m_layeredPlayablesMap = new Dictionary<int, RuntimeInputData>();
-        private List<RuntimeInputData> m_layeredPlayables = new List<RuntimeInputData>();
-        private float m_remainExitTime;
-        private float m_timeSincePlay;
-        private float m_weightDiffThisFrame;
-        private Queue<int> m_recycledIndexes = new Queue<int>();
-        private bool m_hasStatic;
+        
+        int LastPlayableInPlayer = -1;
+        AnimationMixerPlayable m_rootPlayable;
+        
+        Dictionary<int, RuntimeInputData> m_layeredPlayablesMap = new Dictionary<int, RuntimeInputData>();
+        
+        List<RuntimeInputData> m_layeredPlayables = new List<RuntimeInputData>();
+        
+        float m_remainExitTime;
+        
+        float m_timeSincePlay;
+        
+        float m_weightDiffThisFrame;
+        
+        Queue<int> m_recycledIndexes = new Queue<int>();
+        
+        bool m_hasStatic;
 
         public void SetRootPlayable(AnimationMixerPlayable playable)
         {
@@ -299,6 +306,7 @@ namespace UPlayable.AnimationMixer
             }
 
         }
+        
         public void Awake()
         {
             if (m_useCustomFrameRate)
@@ -308,21 +316,40 @@ namespace UPlayable.AnimationMixer
             m_lastEvaluteTime = Time.time;
 
             m_layerControllers = new List<LayeredPlayablesController>();
+            
             m_smoothedLayerWeight = new List<float>();
+            
             m_targetLayerWeight = new List<float>();
+            
+            //创建PlayableGraph对象
             PlayableGraph = PlayableGraph.Create(gameObject.name + " AnimationMixerManager");
+            
+            //var model = PlayableGraph.GetTimeUpdateMode();
+            
+            PlayableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+            
+            //Creates an AnimationPlayableOutput in the PlayableGraph : 在PlayableGraph中创建AnimationPlayableOutput
+            //AnimationPlayableOutput继承自IPlayableOutput, IPlayableOutput将PlayableGraph和Animator联系起来
             m_output = AnimationPlayableOutput.Create(PlayableGraph, "Animation", GetComponentInChildren<Animator>());
+            
+            //AnimationLayerMixerPlayable: Mixes animation layers: Combines layers, each containing one or more AnimationClips, into a single playable.
             m_rootLayerMixerPlayable = AnimationLayerMixerPlayable.Create(PlayableGraph, 0);
+            
+            //设置计算m_output的Playable(m_rootLayerMixerPlayable)，设置子树的序列号
             m_output.SetSourcePlayable(m_rootLayerMixerPlayable, 0);
+            
             PlayableGraph.Stop();
-
+            
             AddLayerControllerToGraph();
         }
 
         public void AddLayerControllerToGraph()
         {
             var controller = new LayeredPlayablesController();
+            //AnimationMixerPlayable
+            //AnimationMixerPlayable runtimeanimatorcontroller中的blender
             var controllerRootPlayable = AnimationMixerPlayable.Create(PlayableGraph, 10);
+            
             controller.SetRootPlayable(controllerRootPlayable);
             m_layerControllers.Add(controller);
             m_targetLayerWeight.Add(1f);
